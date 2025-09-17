@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Private Energy Market - Anonymous Energy Trading</title>
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNCIgZmlsbD0iIzY2N2VlYSIvPgo8cGF0aCBkPSJNMTYgOGw0IDRoLTNjMCAyLjIxLTEuNzkgNC00IDQtMi4yMSAwLTQtMS43OS00LTRoLTNsNS00eiIgZmlsbD0id2hpdGUiLz4KPHBhdGggZD0iTTEwIDIwaDEydjJIMTB6IiBmaWxsPSJ3aGl0ZSIvPgo8L3N2Zz4K" type="image/svg+xml">
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+    <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Private Energy Market</h1>
+            <p>Anonymous and secure energy trading using FHE technology</p>
+            <button id="connectWallet" class="btn btn-primary">Connect Wallet</button>
+            <div id="walletInfo" class="wallet-info hidden">
+                <span id="walletAddress"></span>
+                <span id="balance"></span>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <!-- Market Status -->
+            <section class="market-status">
+                <h2>Market Status</h2>
+                <div id="demoIndicator" class="hidden" style="background: #ffd700; padding: 10px; border-radius: 5px; margin-bottom: 15px; font-weight: bold; text-align: center;">
+                    🎭 DEMO MODE ACTIVE - All transactions are simulated
+                </div>
+                <div class="status-grid">
+                    <div class="status-item">
+                        <label>Session ID:</label>
+                        <span id="sessionId">-</span>
+                    </div>
+                    <div class="status-item">
+                        <label>Market Active:</label>
+                        <span id="marketActive">-</span>
+                    </div>
+                    <div class="status-item">
+                        <label>Total Offers:</label>
+                        <span id="totalOffers">-</span>
+                    </div>
+                    <div class="status-item">
+                        <label>Total Demands:</label>
+                        <span id="totalDemands">-</span>
+                    </div>
+                </div>
+                <button id="refreshMarket" class="btn btn-secondary">Refresh Market Status</button>
+                <button id="startMarketSession" class="btn btn-primary">Start New Market Session</button>
+                <button id="toggleDemo" class="btn btn-secondary">Enable Demo Mode</button>
+            </section>
+
+            <!-- Navigation Tabs -->
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="offer">Create Offer</button>
+                <button class="tab-btn" data-tab="demand">Create Demand</button>
+                <button class="tab-btn" data-tab="matching">Trade Matching</button>
+                <button class="tab-btn" data-tab="history">Trade History</button>
+            </div>
+
+            <!-- Create Energy Offer -->
+            <section id="offer" class="tab-content active">
+                <h2>Create Energy Offer</h2>
+                <form id="offerForm" class="form">
+                    <div class="form-group">
+                        <label for="offerAmount">Energy Amount (kWh):</label>
+                        <input type="number" id="offerAmount" min="1" max="1000000" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="offerPrice">Price per kWh (wei):</label>
+                        <input type="number" id="offerPrice" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="energyType">Energy Type:</label>
+                        <select id="energyType" required>
+                            <option value="0">Solar</option>
+                            <option value="1">Wind</option>
+                            <option value="2">Hydro</option>
+                            <option value="3">Nuclear</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="offerPrivate">
+                            Private Offer (encrypted values)
+                        </label>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Create Offer</button>
+                </form>
+            </section>
+
+            <!-- Create Energy Demand -->
+            <section id="demand" class="tab-content">
+                <h2>Create Energy Demand</h2>
+                <form id="demandForm" class="form">
+                    <div class="form-group">
+                        <label for="demandAmount">Energy Needed (kWh):</label>
+                        <input type="number" id="demandAmount" min="1" max="1000000" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="demandMaxPrice">Max Price per kWh (wei):</label>
+                        <input type="number" id="demandMaxPrice" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="demandPrivate">
+                            Private Demand (encrypted values)
+                        </label>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Create Demand</button>
+                </form>
+            </section>
+
+            <!-- Trade Matching -->
+            <section id="matching" class="tab-content">
+                <h2>Trade Matching</h2>
+                <div class="matching-section">
+                    <div class="matching-form">
+                        <h3>Match Trades</h3>
+                        <div class="form-group">
+                            <label for="matchOfferId">Offer ID:</label>
+                            <input type="number" id="matchOfferId" min="1" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="matchDemandId">Demand ID:</label>
+                            <input type="number" id="matchDemandId" min="1" required>
+                        </div>
+                        <button id="matchTradeBtn" class="btn btn-primary">Match Trade</button>
+                    </div>
+
+                    <div class="user-offers">
+                        <h3>My Offers</h3>
+                        <div id="userOffersList" class="offers-list">
+                            <p>Connect wallet to view your offers</p>
+                        </div>
+                        <button id="loadUserOffers" class="btn btn-secondary hidden">Load My Offers</button>
+                    </div>
+
+                    <div class="user-demands">
+                        <h3>My Demands</h3>
+                        <div id="userDemandsList" class="demands-list">
+                            <p>Connect wallet to view your demands</p>
+                        </div>
+                        <button id="loadUserDemands" class="btn btn-secondary hidden">Load My Demands</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Trade History -->
+            <section id="history" class="tab-content">
+                <h2>Trade History</h2>
+                <div class="history-controls">
+                    <div class="form-group">
+                        <label for="tradeId">Trade ID:</label>
+                        <input type="number" id="tradeId" min="1">
+                    </div>
+                    <button id="loadTradeBtn" class="btn btn-secondary">Load Trade Details</button>
+                </div>
+                <div id="tradeDetails" class="trade-details">
+                    <p>Enter a trade ID to view details</p>
+                </div>
+            </section>
+        </div>
+
+        <!-- Credits Management -->
+        <section class="credits-section">
+            <h2>Credits Management</h2>
+            <div class="credits-info">
+                <span>Your Credits: </span>
+                <span id="userCredits">0</span>
+                <span> wei</span>
+            </div>
+            <div class="credits-form">
+                <input type="number" id="creditsAmount" placeholder="Amount to add" min="1">
+                <button id="addCreditsBtn" class="btn btn-secondary">Add Credits</button>
+            </div>
+        </section>
+    </div>
+
+    <!-- Notification Container -->
+    <div id="notifications" class="notifications"></div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay hidden">
+        <div class="spinner"></div>
+        <p>Processing transaction...</p>
+    </div>
+
+    <script src="./app.js"></script>
+</body>
+</html>
