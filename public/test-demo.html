@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo Mode Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .demo-indicator { background: yellow; padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .hidden { display: none; }
+        button { padding: 10px 20px; margin: 5px; }
+        input, select { padding: 8px; margin: 5px; width: 200px; }
+    </style>
+</head>
+<body>
+    <h1>Demo Mode Test</h1>
+
+    <div id="demoIndicator" class="demo-indicator hidden">
+        🎭 DEMO MODE ACTIVE - All transactions are simulated
+    </div>
+
+    <button id="toggleDemo">Enable Demo Mode</button>
+
+    <h2>Create Offer Test</h2>
+    <form id="testForm">
+        <input type="number" id="amount" placeholder="Energy Amount" value="100">
+        <input type="number" id="price" placeholder="Price" value="50">
+        <select id="energyType">
+            <option value="0">Solar</option>
+            <option value="1">Wind</option>
+        </select>
+        <label><input type="checkbox" id="isPrivate"> Private</label>
+        <button type="submit">Create Offer</button>
+    </form>
+
+    <div id="log"></div>
+
+    <script>
+        class DemoTest {
+            constructor() {
+                this.demoMode = false;
+                this.init();
+            }
+
+            init() {
+                console.log('Test initialized, demo mode:', this.demoMode);
+                document.getElementById('toggleDemo').addEventListener('click', () => this.toggleDemo());
+                document.getElementById('testForm').addEventListener('submit', (e) => this.handleSubmit(e));
+            }
+
+            toggleDemo() {
+                this.demoMode = !this.demoMode;
+                console.log('Demo mode toggled:', this.demoMode);
+
+                const btn = document.getElementById('toggleDemo');
+                const indicator = document.getElementById('demoIndicator');
+
+                if (this.demoMode) {
+                    btn.textContent = 'Disable Demo Mode';
+                    btn.style.background = 'green';
+                    indicator.classList.remove('hidden');
+                    this.log('Demo mode ENABLED');
+                } else {
+                    btn.textContent = 'Enable Demo Mode';
+                    btn.style.background = '';
+                    indicator.classList.add('hidden');
+                    this.log('Demo mode DISABLED');
+                }
+            }
+
+            handleSubmit(e) {
+                e.preventDefault();
+                console.log('Form submitted, demo mode:', this.demoMode);
+
+                if (this.demoMode) {
+                    this.log('DEMO: Simulating offer creation...');
+                    setTimeout(() => {
+                        this.log('DEMO: Offer created successfully!');
+                    }, 1000);
+                } else {
+                    this.log('ERROR: Real mode - would call blockchain');
+                }
+            }
+
+            log(message) {
+                const logDiv = document.getElementById('log');
+                logDiv.innerHTML += '<div>' + new Date().toLocaleTimeString() + ': ' + message + '</div>';
+            }
+        }
+
+        new DemoTest();
+    </script>
+</body>
+</html>

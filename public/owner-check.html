@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contract Owner Check</title>
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .info { background: #f0f0f0; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        button { padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        .error { background: #ffe6e6; color: #cc0000; }
+        .success { background: #e6ffe6; color: #006600; }
+    </style>
+</head>
+<body>
+    <h1>Contract Owner Checker</h1>
+    <p>Contract Address: <code>0x2F0f34ea9aaeF551ac550b42Da0617b929286fF1</code></p>
+
+    <button id="checkOwner">Check Contract Owner</button>
+    <button id="checkMarket">Check Market Status</button>
+
+    <div id="results"></div>
+
+    <script>
+        const contractAddress = '0x2F0f34ea9aaeF551ac550b42Da0617b929286fF1';
+        const contractABI = [
+            "function owner() view returns (address)",
+            "function isMarketActive() view returns (bool)",
+            "function marketSessionId() view returns (uint256)",
+            "function sessionStartTime() view returns (uint256)",
+            "function sessionDuration() view returns (uint256)"
+        ];
+
+        let provider = null;
+        let contract = null;
+
+        async function initContract() {
+            if (typeof window.ethereum === 'undefined') {
+                showResult('Please install MetaMask!', 'error');
+                return false;
+            }
+
+            try {
+                provider = new ethers.providers.Web3Provider(window.ethereum);
+                contract = new ethers.Contract(contractAddress, contractABI, provider);
+                return true;
+            } catch (error) {
+                showResult('Failed to initialize contract: ' + error.message, 'error');
+                return false;
+            }
+        }
+
+        async function checkOwner() {
+            if (!await initContract()) return;
+
+            try {
+                const owner = await contract.owner();
+                showResult(`Contract Owner: ${owner}`, 'success');
+            } catch (error) {
+                showResult('Error getting owner: ' + error.message, 'error');
+            }
+        }
+
+        async function checkMarket() {
+            if (!await initContract()) return;
+
+            try {
+                const isActive = await contract.isMarketActive();
+                const sessionId = await contract.marketSessionId();
+                const startTime = await contract.sessionStartTime();
+                const duration = await contract.sessionDuration();
+
+                const currentTime = Math.floor(Date.now() / 1000);
+                const timeRemaining = Math.max(0, (startTime.toNumber() + duration.toNumber()) - currentTime);
+
+                showResult(`
+                    <strong>Market Status:</strong> ${isActive ? 'ACTIVE' : 'CLOSED'}<br>
+                    <strong>Session ID:</strong> ${sessionId.toString()}<br>
+                    <strong>Session Start:</strong> ${new Date(startTime * 1000).toLocaleString()}<br>
+                    <strong>Duration:</strong> ${duration.toNumber()} seconds (${Math.floor(duration.toNumber() / 3600)} hours)<br>
+                    <strong>Time Remaining:</strong> ${timeRemaining} seconds (${Math.floor(timeRemaining / 60)} minutes)
+                `, isActive ? 'success' : 'error');
+            } catch (error) {
+                showResult('Error getting market status: ' + error.message, 'error');
+            }
+        }
+
+        function showResult(message, type) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = `<div class="info ${type}">${message}</div>`;
+        }
+
+        document.getElementById('checkOwner').addEventListener('click', checkOwner);
+        document.getElementById('checkMarket').addEventListener('click', checkMarket);
+    </script>
+</body>
+</html>
